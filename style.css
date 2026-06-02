@@ -1,0 +1,720 @@
+/* ===========================
+   CSS Reset & Base
+   =========================== */
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-primary: #0a0a0f;
+    --bg-secondary: #12121a;
+    --bg-card: #1a1a25;
+    --bg-card-hover: #222233;
+    --bg-code: #0d0d14;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a0;
+    --text-muted: #555570;
+    --accent-1: #6366f1;
+    --accent-2: #8b5cf6;
+    --accent-3: #a855f7;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+    --cyan: #22d3ee;
+    --border: #2a2a3a;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--accent-1);
+    text-decoration: none;
+    transition: color var(--transition);
+}
+
+a:hover {
+    color: var(--accent-3);
+}
+
+img {
+    max-width: 100%;
+}
+
+/* ===========================
+   Navigation
+   =========================== */
+
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-links a {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: color var(--transition);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--text-primary);
+}
+
+/* ===========================
+   Hero Section
+   =========================== */
+
+.hero {
+    padding: 120px 24px 80px;
+    text-align: center;
+    background: linear-gradient(180deg, 
+        rgba(99, 102, 241, 0.08) 0%,
+        rgba(139, 92, 246, 0.04) 50%,
+        transparent 100%
+    );
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent-1);
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.hero h1 {
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ===========================
+   Rooms Section
+   =========================== */
+
+.rooms-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 24px;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.section-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.section-header p {
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+/* ===========================
+   Room Cards
+   =========================== */
+
+.room-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.room-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.room-card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(99, 102, 241, 0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.room-card:hover::before {
+    opacity: 1;
+}
+
+.room-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.room-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+
+.difficulty-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.difficulty-badge.easy {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--green);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.difficulty-badge.medium {
+    background: rgba(249, 115, 22, 0.15);
+    color: var(--orange);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.difficulty-badge.hard {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.room-card-flags {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.room-card-flags strong {
+    color: var(--yellow);
+}
+
+.room-card-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tech-tag {
+    padding: 3px 8px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--accent-1);
+    font-weight: 500;
+}
+
+/* ===========================
+   Writeup Detail View
+   =========================== */
+
+.writeup-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 24px;
+}
+
+.writeup-section.hidden {
+    display: none;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: 32px;
+    font-family: 'Inter', sans-serif;
+}
+
+.back-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ===========================
+   Writeup Content Styles
+   =========================== */
+
+#writeupContent h1 {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+#writeupContent .writeup-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+#writeupContent .meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+#writeupContent .meta-item strong {
+    color: var(--text-primary);
+}
+
+#writeupContent hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+}
+
+#writeupContent h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 40px 0 16px;
+    letter-spacing: -0.5px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-primary);
+}
+
+#writeupContent h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+    color: var(--accent-1);
+}
+
+#writeupContent p {
+    margin-bottom: 16px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+#writeupContent strong {
+    color: var(--text-primary);
+}
+
+#writeupContent ul, 
+#writeupContent ol {
+    margin: 12px 0 20px;
+    padding-left: 24px;
+}
+
+#writeupContent li {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+#writeupContent table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 16px 0 24px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+#writeupContent th {
+    background: var(--bg-card);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+#writeupContent td {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+#writeupContent tr:last-child td {
+    border-bottom: none;
+}
+
+#writeupContent code {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--cyan);
+}
+
+#writeupContent pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+    overflow-x: auto;
+    position: relative;
+}
+
+#writeupContent pre code {
+    background: none;
+    padding: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.7;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===========================
+   Flags Table in Writeup
+   =========================== */
+
+#writeupContent .flags-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0 24px;
+}
+
+#writeupContent .flag-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+}
+
+#writeupContent .flag-card .flag-num {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--accent-1);
+    display: block;
+}
+
+#writeupContent .flag-card .flag-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* ===========================
+   Key Takeaways Block
+   =========================== */
+
+#writeupContent .takeaways {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    margin: 24px 0;
+}
+
+#writeupContent .takeaways h3 {
+    color: var(--accent-1);
+    margin-top: 0;
+}
+
+#writeupContent .takeaways ul {
+    margin-bottom: 0;
+}
+
+#writeupContent .takeaways li {
+    color: var(--text-secondary);
+}
+
+/* ===========================
+   Chain Block
+   =========================== */
+
+#writeupContent .chain {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 24px;
+}
+
+#writeupContent .chain-step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+#writeupContent .chain-arrow {
+    color: var(--accent-1);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+#writeupContent .chain-step.current {
+    border-color: var(--accent-1);
+    color: var(--accent-1);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* ===========================
+   Footer
+   =========================== */
+
+footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+footer a {
+    color: var(--text-secondary);
+}
+
+footer a:hover {
+    color: var(--accent-1);
+}
+
+/* ===========================
+   Animations
+   =========================== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.room-card {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.room-card:nth-child(1) { animation-delay: 0.05s; }
+.room-card:nth-child(2) { animation-delay: 0.10s; }
+.room-card:nth-child(3) { animation-delay: 0.15s; }
+.room-card:nth-child(4) { animation-delay: 0.20s; }
+.room-card:nth-child(5) { animation-delay: 0.25s; }
+.room-card:nth-child(6) { animation-delay: 0.30s; }
+.room-card:nth-child(7) { animation-delay: 0.35s; }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+#writeupSection {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 36px;
+    }
+    .hero-stats {
+        gap: 24px;
+    }
+    .stat-num {
+        font-size: 28px;
+    }
+    .rooms-grid {
+        grid-template-columns: 1fr;
+    }
+    #writeupContent h1 {
+        font-size: 26px;
+    }
+    #writeupContent h2 {
+        font-size: 20px;
+    }
+    #writeupContent pre {
+        padding: 14px 16px;
+    }
+    .nav-inner {
+        padding: 12px 16px;
+    }
+    .hero {
+        padding: 100px 16px 60px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 28px;
+    }
+    .hero-stats {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    .room-card {
+        padding: 20px;
+    }
+}

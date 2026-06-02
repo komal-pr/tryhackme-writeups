@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komal's TryHackMe Writeups</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-inner">
+            <span class="logo">⚔️ THM Writeups</span>
+            <div class="nav-links">
+                <a href="#" class="active">Writeups</a>
+                <a href="https://github.com/komal-pr" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">CTF Walkthroughs</div>
+            <h1>TryHackMe <span class="gradient-text">Writeups</span></h1>
+            <p>Detailed walkthroughs of TryHackMe CTF rooms — from reconnaissance to root. <br>Each writeup covers the full attack chain with commands, exploits, and key takeaways.</p>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-num">7</span>
+                    <span class="stat-label">Rooms</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">19</span>
+                    <span class="stat-label">Flags</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">5</span>
+                    <span class="stat-label">Easy</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-num">2</span>
+                    <span class="stat-label">Medium</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="rooms-section" id="rooms">
+        <div class="section-header">
+            <h2>All Writeups</h2>
+            <p>Click any room to view the full walkthrough</p>
+        </div>
+        <div class="rooms-grid" id="roomsGrid"></div>
+    </section>
+
+    <section class="writeup-section hidden" id="writeupSection">
+        <button class="back-btn" id="backBtn">← Back to all writeups</button>
+        <div id="writeupContent"></div>
+    </section>
+
+    <footer>
+        <p>Built by <a href="https://github.com/komal-pr" target="_blank">Komal Prasad</a> · Writeups hosted on GitHub Pages</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
