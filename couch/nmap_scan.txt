@@ -1,0 +1,17 @@
+# Nmap 7.95 scan initiated Wed May 27 20:08:11 2026 as: /usr/lib/nmap/nmap --privileged -sC -sV -p- -oN nmap_scan.txt 10.49.183.169
+Nmap scan report for 10.49.183.169
+Host is up (0.043s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 34:9d:39:09:34:30:4b:3d:a7:1e:df:eb:a3:b0:e5:aa (RSA)
+|   256 a4:2e:ef:3a:84:5d:21:1b:b9:d4:26:13:a5:2d:df:19 (ECDSA)
+|_  256 e1:6d:4d:fd:c8:00:8e:86:c2:13:2d:c7:ad:85:13:9c (ED25519)
+5984/tcp open  http    CouchDB httpd 1.6.1 (Erlang OTP/18)
+|_http-server-header: CouchDB/1.6.1 (Erlang OTP/18)
+|_http-title: Site doesn't have a title (text/plain; charset=utf-8).
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed May 27 20:08:42 2026 -- 1 IP address (1 host up) scanned in 31.37 seconds

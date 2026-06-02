@@ -1,0 +1,9 @@
+PING 10.48.176.241 (10.48.176.241) 56(84) bytes of data.
+64 bytes from 10.48.176.241: icmp_seq=1 ttl=62 time=46.9 ms
+64 bytes from 10.48.176.241: icmp_seq=2 ttl=62 time=42.8 ms
+64 bytes from 10.48.176.241: icmp_seq=3 ttl=62 time=45.8 ms
+64 bytes from 10.48.176.241: icmp_seq=4 ttl=62 time=48.0 ms
+
+--- 10.48.176.241 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3004ms
+rtt min/avg/max/mdev = 42.780/45.859/48.035/1.949 ms
