@@ -667,7 +667,7 @@ print(fernet.decrypt(encrypted.encode()).decode())
   </ul>
 </div>
 `
-  }
+  },
   {
     id: "jack-of-all-trades",
     title: "Jack of All Trades",
